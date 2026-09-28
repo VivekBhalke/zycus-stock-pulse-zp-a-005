@@ -132,6 +132,99 @@ public class ProductServiceImpl implements ProductService {
         return null;
     }
     
+    
+    @Override
+    public void checkAndTriggerLowStockSuggestions(String productId) {
+        Product product = productRepository.findById(productId).orElse(null);
+        if (product != null && product.getStockLevel() < product.getReorderThreshold()) {
+            // Check if suggestion already exists
+            List<PricingSuggestion> existingPricingSuggestions = 
+                pricingSuggestionRepository.findByProductIdAndTriggerReasonAndStatus(
+                    productId, TriggerReason.INVENTORY_LOW, SuggestionStatus.PENDING);
+            
+            List<ReorderSuggestion> existingReorderSuggestions = 
+                reorderSuggestionRepository.findByProductIdAndTriggerReasonAndStatus(
+                    productId, TriggerReason.INVENTORY_LOW, SuggestionStatus.PENDING);
+            
+            // Use the active unified commerce advisor
+            CommerceAdvisor commerceAdvisor = strategyFactory.getActiveStrategy();
+            CommerceAdvice commerceAdvice = commerceAdvisor.calculateAdvice(product);
+            
+            if (existingPricingSuggestions.isEmpty()) {
+                // Generate new pricing suggestion using the active strategy
+                PricingSuggestion pricingSuggestion = new PricingSuggestion();
+                pricingSuggestion.setProductId(productId);
+                pricingSuggestion.setSuggestedPrice(commerceAdvice.getSuggestedPrice());
+                pricingSuggestion.setConfidenceScore(commerceAdvice.getConfidenceScore());
+                pricingSuggestion.setReasoning(commerceAdvice.getReasoning());
+                pricingSuggestion.setTriggerReason(TriggerReason.INVENTORY_LOW);
+                pricingSuggestion.setStatus(SuggestionStatus.PENDING);
+                pricingSuggestion.setCreatedAt(LocalDateTime.now());
+                pricingSuggestion.setUpdatedAt(LocalDateTime.now());
+                
+                pricingSuggestionRepository.save(pricingSuggestion);
+            }
+            
+            if (existingReorderSuggestions.isEmpty()) {
+                // Generate new reorder suggestion using the active strategy
+                ReorderSuggestion reorderSuggestion = new ReorderSuggestion();
+                reorderSuggestion.setProductId(productId);
+                reorderSuggestion.setSuggestedQuantity(commerceAdvice.getSuggestedReorderQuantity());
+                reorderSuggestion.setConfidenceScore(commerceAdvice.getConfidenceScore());
+                reorderSuggestion.setReasoning(commerceAdvice.getReasoning());
+                reorderSuggestion.setTriggerReason(TriggerReason.INVENTORY_LOW);
+                reorderSuggestion.setStatus(SuggestionStatus.PENDING);
+                reorderSuggestion.setCreatedAt(LocalDateTime.now());
+                reorderSuggestion.setUpdatedAt(LocalDateTime.now());
+                
+                reorderSuggestionRepository.save(reorderSuggestion);
+            }
+        }
+    }
+    
+    @Override
+    public void checkAndTriggerDemandSpikeSuggestions(String productId) {
+        Product product = productRepository.findById(productId).orElse(null);
+        if (product != null) {
+            // Check if demand velocity spiked (3x category average or configured threshold)
+            // This would involve comparing with category averages from DemandThresholdConfig
+            boolean isSpike = isDemandVelocitySpike(product);
+            
+            if (isSpike) {
+                // Check if suggestion already exists
+                List<PricingSuggestion> existingPricingSuggestions = 
+                    pricingSuggestionRepository.findByProductIdAndTriggerReasonAndStatus(
+                        productId, TriggerReason.DEMAND_SPIKE, SuggestionStatus.PENDING);
+                
+                if (existingPricingSuggestions.isEmpty()) {
+                    // Use the active unified commerce advisor
+                    CommerceAdvisor commerceAdvisor = strategyFactory.getActiveStrategy();
+                    CommerceAdvice commerceAdvice = commerceAdvisor.calculateAdvice(product);
+                    
+                    // Generate new pricing suggestion only for demand spikes using the active strategy
+                    PricingSuggestion pricingSuggestion = new PricingSuggestion();
+                    pricingSuggestion.setProductId(productId);
+                    pricingSuggestion.setSuggestedPrice(commerceAdvice.getSuggestedPrice());
+                    pricingSuggestion.setConfidenceScore(commerceAdvice.getConfidenceScore());
+                    pricingSuggestion.setReasoning(commerceAdvice.getReasoning());
+                    pricingSuggestion.setTriggerReason(TriggerReason.DEMAND_SPIKE);
+                    pricingSuggestion.setStatus(SuggestionStatus.PENDING);
+                    pricingSuggestion.setCreatedAt(LocalDateTime.now());
+                    pricingSuggestion.setUpdatedAt(LocalDateTime.now());
+                    
+                    pricingSuggestionRepository.save(pricingSuggestion);
+                }
+            }
+        }
+    }
+    
+    // Helper method for demand spike detection logic
+    private boolean isDemandVelocitySpike(Product product) {
+        // Placeholder for demand spike detection logic
+        // Would compare with category averages and configured multipliers
+        return product.getDemandVelocity() > 10; // Simple example
+    }
+}
     @Override
     public List<PricingSuggestion> getPendingPricingSuggestions(String productId) {
         return pricingSuggestionRepository.findByProductIdAndStatus(productId, SuggestionStatus.PENDING);
