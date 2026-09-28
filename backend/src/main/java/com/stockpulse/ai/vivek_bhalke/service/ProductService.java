@@ -1,7 +1,7 @@
 
-package main.java.com.stockpulse.ai.vivek_bhalke.service;
+package com.stockpulse.ai.vivek_bhalke.service;
 
-import main.java.com.stockpulse.ai.vivek_bhalke.entity.*;
+import com.stockpulse.ai.vivek_bhalke.entity.*;
 
 import java.math.BigDecimal;
 import java.util.List;

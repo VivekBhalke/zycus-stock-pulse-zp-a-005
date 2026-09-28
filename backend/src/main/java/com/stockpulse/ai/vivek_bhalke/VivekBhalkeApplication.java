@@ -1,4 +1,4 @@
-package main.java.com.stockpulse.ai.vivek_bhalke;
+package com.stockpulse.ai.vivek_bhalke;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

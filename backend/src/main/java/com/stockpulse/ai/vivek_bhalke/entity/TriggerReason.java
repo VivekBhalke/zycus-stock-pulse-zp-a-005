@@ -1,4 +1,4 @@
-package main.java.com.stockpulse.ai.vivek_bhalke.entity;
+package com.stockpulse.ai.vivek_bhalke.entity;
 
 public enum TriggerReason {
     INVENTORY_LOW,

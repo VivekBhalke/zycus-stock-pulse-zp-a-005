@@ -1,8 +1,8 @@
-package main.java.com.stockpulse.ai.vivek_bhalke.repository;
+package com.stockpulse.ai.vivek_bhalke.repository;
 
-import main.java.com.stockpulse.ai.vivek_bhalke.entity.ReorderSuggestion;
-import main.java.com.stockpulse.ai.vivek_bhalke.entity.SuggestionStatus;
-import main.java.com.stockpulse.ai.vivek_bhalke.entity.TriggerReason;
+import com.stockpulse.ai.vivek_bhalke.entity.ReorderSuggestion;
+import com.stockpulse.ai.vivek_bhalke.entity.SuggestionStatus;
+import com.stockpulse.ai.vivek_bhalke.entity.TriggerReason;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

@@ -1,10 +1,16 @@
-package  main.java.com.stockpulse.ai.vivek_bhalke.repository;
+package com.stockpulse.ai.vivek_bhalke.repository;
+
 import com.stockpulse.ai.vivek_bhalke.entity.Product;
+import com.stockpulse.ai.vivek_bhalke.entity.ProductStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
-public interface ProductRepository extends JpaRepository<Product, Long> {
+public interface ProductRepository extends JpaRepository<Product, String> {
     List<Product> findByStatus(ProductStatus status);
     
     List<Product> findByCategory(String category);

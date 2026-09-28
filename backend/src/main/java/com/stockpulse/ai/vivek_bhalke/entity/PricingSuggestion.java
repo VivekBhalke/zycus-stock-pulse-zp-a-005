@@ -1,7 +1,7 @@
-package main.java.com.stockpulse.ai.vivek_bhalke.entity;
+package com.stockpulse.ai.vivek_bhalke.entity;
 
-import main.java.com.stockpulse.ai.vivek_bhalke.entity.SuggestionStatus;
-import main.java.com.stockpulse.ai.vivek_bhalke.entity.TriggerReason;
+import com.stockpulse.ai.vivek_bhalke.entity.SuggestionStatus;
+import com.stockpulse.ai.vivek_bhalke.entity.TriggerReason;
 
 import jakarta.persistence.*;
 import java.math.BigDecimal;

@@ -1,4 +1,4 @@
-package main.java.com.stockpulse.ai.vivek_bhalke.dto;
+package com.stockpulse.ai.vivek_bhalke.dto;
 
 import java.math.BigDecimal;
 

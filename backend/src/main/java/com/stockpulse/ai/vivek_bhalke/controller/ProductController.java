@@ -1,12 +1,12 @@
-package main.java.com.stockpulse.ai.vivek_bhalke.controller;
+package com.stockpulse.ai.vivek_bhalke.controller;
 
-import main.java.com.stockpulse.ai.vivek_bhalke.entity.*;
+import com.stockpulse.ai.vivek_bhalke.entity.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import main.java.com.stockpulse.ai.vivek_bhalke.service.*;
+import com.stockpulse.ai.vivek_bhalke.service.*;
 import java.math.BigDecimal;
 import java.util.List;
 
@@ -23,9 +23,8 @@ public class ProductController {
      */
     @PostMapping
     public ResponseEntity<Product> createProduct(@RequestBody Product product) {
-        // Product savedProduct = productService.createProduct(product);
-        // return new ResponseEntity<>(savedProduct, HttpStatus.CREATED);
-        return new ResponseEntity<>(product, HttpStatus.CREATED);
+        Product savedProduct = productService.createProduct(product);
+        return new ResponseEntity<>(savedProduct, HttpStatus.CREATED);
     }
     
     /**
@@ -35,9 +34,8 @@ public class ProductController {
     public ResponseEntity<List<Product>> getProducts(
             @RequestParam(required = false) ProductStatus status,
             @RequestParam(required = false) String category) {
-        // List<Product> products = productService.getProducts(status, category);
-        // return new ResponseEntity<>(products, HttpStatus.OK);
-        return new ResponseEntity<>(List.of(), HttpStatus.OK);
+        List<Product> products = productService.getProducts(status, category);
+        return new ResponseEntity<>(products, HttpStatus.OK);
     }
     
     /**
@@ -47,12 +45,8 @@ public class ProductController {
     public ResponseEntity<Product> updateStock(
             @PathVariable String id,
             @RequestParam Integer newStockLevel) {
-        // Product updatedProduct = productService.updateStock(id, newStockLevel);
-        // return new ResponseEntity<>(updatedProduct, HttpStatus.OK);
-        Product product = new Product();
-        product.setId(id);
-        product.setStockLevel(newStockLevel);
-        return new ResponseEntity<>(product, HttpStatus.OK);
+        Product updatedProduct = productService.updateStock(id, newStockLevel);
+        return new ResponseEntity<>(updatedProduct, HttpStatus.OK);
     }
     
     /**
@@ -62,13 +56,8 @@ public class ProductController {
     public ResponseEntity<Product> processOrder(
             @PathVariable String id,
             @RequestParam Integer quantity) {
-        // Product updatedProduct = productService.processOrder(id, quantity);
-        // return new ResponseEntity<>(updatedProduct, HttpStatus.OK);
-        Product product = new Product();
-        product.setId(id);
-        product.setStockLevel(100 - quantity); // Example calculation
-        product.setDemandVelocity(5); // Example velocity
-        return new ResponseEntity<>(product, HttpStatus.OK);
+        Product updatedProduct = productService.processOrder(id, quantity);
+        return new ResponseEntity<>(updatedProduct, HttpStatus.OK);
     }
     
     /**
@@ -76,12 +65,7 @@ public class ProductController {
      */
     @PostMapping("/{id}/suggest-pricing")
     public ResponseEntity<PricingSuggestion> suggestPricing(@PathVariable String id) {
-        // PricingSuggestion suggestion = productService.generatePricingSuggestion(id);
-        // return new ResponseEntity<>(suggestion, HttpStatus.OK);
-        PricingSuggestion suggestion = new PricingSuggestion();
-        suggestion.setProductId(id);
-        suggestion.setSuggestedPrice(new BigDecimal("29.99"));
-        suggestion.setTriggerReason(TriggerReason.MANUAL);
+        PricingSuggestion suggestion = productService.generatePricingSuggestion(id);
         return new ResponseEntity<>(suggestion, HttpStatus.OK);
     }
     
@@ -90,12 +74,7 @@ public class ProductController {
      */
     @PostMapping("/{id}/suggest-reorder")
     public ResponseEntity<ReorderSuggestion> suggestReorder(@PathVariable String id) {
-        // ReorderSuggestion suggestion = productService.generateReorderSuggestion(id);
-        // return new ResponseEntity<>(suggestion, HttpStatus.OK);
-        ReorderSuggestion suggestion = new ReorderSuggestion();
-        suggestion.setProductId(id);
-        suggestion.setSuggestedQuantity(50);
-        suggestion.setTriggerReason(TriggerReason.MANUAL);
+        ReorderSuggestion suggestion = productService.generateReorderSuggestion(id);
         return new ResponseEntity<>(suggestion, HttpStatus.OK);
     }
     
@@ -106,12 +85,8 @@ public class ProductController {
     public ResponseEntity<PricingSuggestion> updatePricingSuggestion(
             @PathVariable Long id,
             @RequestParam SuggestionStatus status) {
-        // PricingSuggestion updatedSuggestion = productService.updatePricingSuggestion(id, status);
-        // return new ResponseEntity<>(updatedSuggestion, HttpStatus.OK);
-        PricingSuggestion suggestion = new PricingSuggestion();
-        suggestion.setId(id);
-        suggestion.setStatus(status);
-        return new ResponseEntity<>(suggestion, HttpStatus.OK);
+        PricingSuggestion updatedSuggestion = productService.updatePricingSuggestion(id, status);
+        return new ResponseEntity<>(updatedSuggestion, HttpStatus.OK);
     }
     
     /**
@@ -121,12 +96,8 @@ public class ProductController {
     public ResponseEntity<ReorderSuggestion> updateReorderSuggestion(
             @PathVariable Long id,
             @RequestParam SuggestionStatus status) {
-        // ReorderSuggestion updatedSuggestion = productService.updateReorderSuggestion(id, status);
-        // return new ResponseEntity<>(updatedSuggestion, HttpStatus.OK);
-        ReorderSuggestion suggestion = new ReorderSuggestion();
-        suggestion.setId(id);
-        suggestion.setStatus(status);
-        return new ResponseEntity<>(suggestion, HttpStatus.OK);
+        ReorderSuggestion updatedSuggestion = productService.updateReorderSuggestion(id, status);
+        return new ResponseEntity<>(updatedSuggestion, HttpStatus.OK);
     }
     
     /**
@@ -134,11 +105,7 @@ public class ProductController {
      */
     @GetMapping("/{id}")
     public ResponseEntity<Product> getProductById(@PathVariable String id) {
-        // Product product = productService.getProductById(id);
-        // return new ResponseEntity<>(product, HttpStatus.OK);
-        Product product = new Product();
-        product.setId(id);
-        product.setName("Sample Product");
+        Product product = productService.getProductById(id);
         return new ResponseEntity<>(product, HttpStatus.OK);
     }
 }

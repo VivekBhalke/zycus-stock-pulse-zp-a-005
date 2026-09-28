@@ -1,5 +1,6 @@
-package main.java.com.stockpulse.ai.vivek_bhalke.entity;
-import main.java.com.stockpulse.ai.vivek_bhalke.entity.ProductStatus;
+package com.stockpulse.ai.vivek_bhalke.entity;
+
+import com.stockpulse.ai.vivek_bhalke.entity.ProductStatus;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
