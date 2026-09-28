@@ -1,8 +1,10 @@
-
 package main.java.com.stockpulse.ai.vivek_bhalke.service;
 
 import main.java.com.stockpulse.ai.vivek_bhalke.entity.*;
 import main.java.com.stockpulse.ai.vivek_bhalke.repository.*;
+import main.java.com.stockpulse.ai.vivek_bhalke.strategy.StrategyFactory;
+import main.java.com.stockpulse.ai.vivek_bhalke.strategy.CommerceAdvisor;
+import main.java.com.stockpulse.ai.vivek_bhalke.dto.CommerceAdvice;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -23,30 +25,10 @@ public class ProductServiceImpl implements ProductService {
     @Autowired
     private ReorderSuggestionRepository reorderSuggestionRepository;
     
-    @Override
-    public Product createProduct(Product product) {
-        product.setCreatedAt(LocalDateTime.now());
-        product.setUpdatedAt(LocalDateTime.now());
-        return productRepository.save(product);
-    }
+    @Autowired
+    private StrategyFactory strategyFactory;
     
     @Override
-    public List<Product> getProducts(ProductStatus status, String category) {
-        if (status != null && category != null) {
-            return productRepository.findByStatusAndCategory(status, category);
-        } else if (status != null) {
-            return productRepository.findByStatus(status);
-        } else if (category != null) {
-            return productRepository.findByCategory(category);
-        } else {
-            return productRepository.findAll();
-        }
-    }
-    
-    @Override
-    public Product getProductById(String id) {
-        return productRepository.findById(id).orElse(null);
-    }
     
     @Override
     public Product updateStock(String id, Integer newStockLevel) {
@@ -92,47 +74,14 @@ public class ProductServiceImpl implements ProductService {
     public PricingSuggestion generatePricingSuggestion(String id) {
         Product product = productRepository.findById(id).orElse(null);
         if (product != null) {
-            // Call AI service or rule-based logic
-            BigDecimal suggestedPrice = calculateSuggestedPrice(product);
-            String reasoning = generatePricingReasoning(product, suggestedPrice);
+            // Use the active unified commerce advisor
+            CommerceAdvisor commerceAdvisor = strategyFactory.getActiveStrategy();
+            CommerceAdvice commerceAdvice = commerceAdvisor.calculateAdvice(product);
             
             PricingSuggestion suggestion = new PricingSuggestion();
             suggestion.setProductId(id);
-            suggestion.setSuggestedPrice(suggestedPrice);
-            suggestion.setConfidenceScore(0.85);
-            suggestion.setReasoning(reasoning);
-            suggestion.setTriggerReason(TriggerReason.MANUAL);
-            suggestion.setStatus(SuggestionStatus.PENDING);
-            suggestion.setCreatedAt(LocalDateTime.now());
-            suggestion.setUpdatedAt(LocalDateTime.now());
-            
-            return pricingSuggestionRepository.save(suggestion);
-        }
-        return null;
-    }
-    
-    @Override
-    public ReorderSuggestion generateReorderSuggestion(String id) {
-        Product product = productRepository.findById(id).orElse(null);
-        if (product != null) {
-            // Call AI service or rule-based logic
-            Integer suggestedQuantity = calculateSuggestedReorderQuantity(product);
-            String reasoning = generateReorderReasoning(product, suggestedQuantity);
-            
-            ReorderSuggestion suggestion = new ReorderSuggestion();
-            suggestion.setProductId(id);
-            suggestion.setSuggestedQuantity(suggestedQuantity);
-            suggestion.setConfidenceScore(0.80);
-            suggestion.setReasoning(reasoning);
-            suggestion.setTriggerReason(TriggerReason.MANUAL);
-            suggestion.setStatus(SuggestionStatus.PENDING);
-            suggestion.setCreatedAt(LocalDateTime.now());
-            suggestion.setUpdatedAt(LocalDateTime.now());
-            
-            return reorderSuggestionRepository.save(suggestion);
-        }
-        return null;
-    }
+            suggestion.setSuggestedPrice(commerceAdvice.getSuggestedPrice());
+            suggestion.setConfidenceScore(commerceAdvice.getConfidenceScore());
     
     @Override
     public PricingSuggestion updatePricingSuggestion(Long suggestionId, SuggestionStatus status) {
@@ -192,81 +141,59 @@ public class ProductServiceImpl implements ProductService {
     public List<ReorderSuggestion> getPendingReorderSuggestions(String productId) {
         return reorderSuggestionRepository.findByProductIdAndStatus(productId, SuggestionStatus.PENDING);
     }
-    
-    @Override
-    public void checkAndTriggerLowStockSuggestions(String productId) {
-        Product product = productRepository.findById(productId).orElse(null);
-        if (product != null && product.getStockLevel() < product.getReorderThreshold()) {
-            // Check if suggestion already exists
-            List<PricingSuggestion> existingPricingSuggestions = 
-                pricingSuggestionRepository.findByProductIdAndTriggerReasonAndStatus(
-                    productId, TriggerReason.INVENTORY_LOW, SuggestionStatus.PENDING);
+            suggestion.setReasoning(commerceAdvice.getReasoning());
+            suggestion.setTriggerReason(TriggerReason.MANUAL);
+            suggestion.setStatus(SuggestionStatus.PENDING);
+            suggestion.setCreatedAt(LocalDateTime.now());
+            suggestion.setUpdatedAt(LocalDateTime.now());
             
-            List<ReorderSuggestion> existingReorderSuggestions = 
-                reorderSuggestionRepository.findByProductIdAndTriggerReasonAndStatus(
-                    productId, TriggerReason.INVENTORY_LOW, SuggestionStatus.PENDING);
-            
-            if (existingPricingSuggestions.isEmpty()) {
-                // Generate new pricing suggestion
-                generatePricingSuggestion(productId);
-            }
-            
-            if (existingReorderSuggestions.isEmpty()) {
-                // Generate new reorder suggestion
-                generateReorderSuggestion(productId);
-            }
+            return pricingSuggestionRepository.save(suggestion);
         }
+        return null;
     }
     
     @Override
-    public void checkAndTriggerDemandSpikeSuggestions(String productId) {
-        Product product = productRepository.findById(productId).orElse(null);
+    public ReorderSuggestion generateReorderSuggestion(String id) {
+        Product product = productRepository.findById(id).orElse(null);
         if (product != null) {
-            // Check if demand velocity spiked (3x category average or configured threshold)
-            // This would involve comparing with category averages from DemandThresholdConfig
-            boolean isSpike = isDemandVelocitySpike(product);
+            // Use the active unified commerce advisor
+            CommerceAdvisor commerceAdvisor = strategyFactory.getActiveStrategy();
+            CommerceAdvice commerceAdvice = commerceAdvisor.calculateAdvice(product);
             
-            if (isSpike) {
-                // Check if suggestion already exists
-                List<PricingSuggestion> existingPricingSuggestions = 
-                    pricingSuggestionRepository.findByProductIdAndTriggerReasonAndStatus(
-                        productId, TriggerReason.DEMAND_SPIKE, SuggestionStatus.PENDING);
-                
-                if (existingPricingSuggestions.isEmpty()) {
-                    // Generate new pricing suggestion only for demand spikes
-                    generatePricingSuggestion(productId);
-                }
-            }
+            ReorderSuggestion suggestion = new ReorderSuggestion();
+            suggestion.setProductId(id);
+            suggestion.setSuggestedQuantity(commerceAdvice.getSuggestedReorderQuantity());
+            suggestion.setConfidenceScore(commerceAdvice.getConfidenceScore());
+            suggestion.setReasoning(commerceAdvice.getReasoning());
+            suggestion.setTriggerReason(TriggerReason.MANUAL);
+            suggestion.setStatus(SuggestionStatus.PENDING);
+            suggestion.setCreatedAt(LocalDateTime.now());
+            suggestion.setUpdatedAt(LocalDateTime.now());
+            
+            return reorderSuggestionRepository.save(suggestion);
+        }
+        return null;
+    }
+    public Product createProduct(Product product) {
+        product.setCreatedAt(LocalDateTime.now());
+        product.setUpdatedAt(LocalDateTime.now());
+        return productRepository.save(product);
+    }
+    
+    @Override
+    public List<Product> getProducts(ProductStatus status, String category) {
+        if (status != null && category != null) {
+            return productRepository.findByStatusAndCategory(status, category);
+        } else if (status != null) {
+            return productRepository.findByStatus(status);
+        } else if (category != null) {
+            return productRepository.findByCategory(category);
+        } else {
+            return productRepository.findAll();
         }
     }
     
-    // Helper methods (would be more sophisticated in real implementation)
-    private BigDecimal calculateSuggestedPrice(Product product) {
-        // Placeholder for AI or rule-based pricing logic
-        return product.getCurrentPrice().multiply(new BigDecimal("1.1")); // 10% increase example
+    @Override
+    public Product getProductById(String id) {
+        return productRepository.findById(id).orElse(null);
     }
-    
-    private Integer calculateSuggestedReorderQuantity(Product product) {
-        // Placeholder for AI or rule-based reorder logic
-        return Math.max(50, product.getReorderThreshold() * 3); // Example calculation
-    }
-    
-    private String generatePricingReasoning(Product product, BigDecimal suggestedPrice) {
-        // Placeholder for AI-generated reasoning
-        return "Based on current stock levels (" + product.getStockLevel() + ") and demand velocity (" + 
-               product.getDemandVelocity() + "), suggesting price adjustment from $" + 
-               product.getCurrentPrice() + " to $" + suggestedPrice + ".";
-    }
-    
-    private String generateReorderReasoning(Product product, Integer suggestedQuantity) {
-        // Placeholder for AI-generated reasoning
-        return "Based on current stock levels (" + product.getStockLevel() + ") and reorder threshold (" + 
-               product.getReorderThreshold() + "), suggesting reorder quantity of " + suggestedQuantity + " units.";
-    }
-    
-    private boolean isDemandVelocitySpike(Product product) {
-        // Placeholder for demand spike detection logic
-        // Would compare with category averages and configured multipliers
-        return product.getDemandVelocity() > 10; // Simple example
-    }
-}

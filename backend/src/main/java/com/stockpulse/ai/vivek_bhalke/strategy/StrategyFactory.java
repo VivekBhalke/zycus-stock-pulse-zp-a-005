@@ -1,47 +1,32 @@
 package main.java.com.stockpulse.ai.vivek_bhalke.strategy;
 
-import main.java.com.stockpulse.ai.vivek_bhalke.strategy.impl.RuleBasedPricingStrategy;
-import main.java.com.stockpulse.ai.vivek_bhalke.strategy.impl.AIPricingStrategy;
-import main.java.com.stockpulse.ai.vivek_bhalke.strategy.impl.RuleBasedReorderStrategy;
-import main.java.com.stockpulse.ai.vivek_bhalke.strategy.impl.AIReorderStrategy;
-import org.springframework.beans.factory.annotation.Value;
+import main.java.com.stockpulse.ai.vivek_bhalke.strategy.impl.RuleBasedCommerceAdvisor;
+import main.java.com.stockpulse.ai.vivek_bhalke.strategy.impl.AICommerceAdvisor;
 import org.springframework.stereotype.Component;
 
 @Component
 public class StrategyFactory {
     
-    private final RuleBasedPricingStrategy ruleBasedPricing;
-    private final AIPricingStrategy aiPricing;
-    private final RuleBasedReorderStrategy ruleBasedReorder;
-    private final AIReorderStrategy aiReorder;
+    private final RuleBasedCommerceAdvisor ruleBased;
+    private final AICommerceAdvisor aiAdvisor;
     
-    @Value("${commerce.strategy.pricing:RULE_BASED}")
-    private String pricingStrategyConfig;
+    // Simulating a dynamic configuration toggle (could be updated via an API endpoint at runtime)
+    private String activeStrategyConfig = "RULE_BASED"; 
     
-    @Value("${commerce.strategy.reorder:RULE_BASED}")
-    private String reorderStrategyConfig;
-    
-    public StrategyFactory(RuleBasedPricingStrategy ruleBasedPricing, 
-                          AIPricingStrategy aiPricing,
-                          RuleBasedReorderStrategy ruleBasedReorder,
-                          AIReorderStrategy aiReorder) {
-        this.ruleBasedPricing = ruleBasedPricing;
-        this.aiPricing = aiPricing;
-        this.ruleBasedReorder = ruleBasedReorder;
-        this.aiReorder = aiReorder;
+    public StrategyFactory(RuleBasedCommerceAdvisor ruleBased, AICommerceAdvisor aiAdvisor) {
+        this.ruleBased = ruleBased;
+        this.aiAdvisor = aiAdvisor;
     }
     
-    public PricingStrategy getActivePricingStrategy() {
-        if ("AI".equalsIgnoreCase(pricingStrategyConfig)) {
-            return aiPricing;
-        }
-        return ruleBasedPricing;
+    // Allows your frontend/controller to switch it instantly on-the-fly
+    public void setActiveStrategyConfig(String strategy) {
+        this.activeStrategyConfig = strategy;
     }
     
-    public ReorderStrategy getActiveReorderStrategy() {
-        if ("AI".equalsIgnoreCase(reorderStrategyConfig)) {
-            return aiReorder;
+    public CommerceAdvisor getActiveStrategy() {
+        if ("AI".equalsIgnoreCase(activeStrategyConfig)) {
+            return aiAdvisor;
         }
-        return ruleBasedReorder;
+        return ruleBased;
     }
 }
